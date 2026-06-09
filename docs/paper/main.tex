@@ -1,0 +1,327 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepgfplotslibrary{statistics}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{shapes.geometric, arrows, positioning, fit, calc}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\lstset{
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    frame=single,
+    language=SQL,
+    captionpos=b
+}
+
+\begin{document}
+
+\title{Quantifying Logistics Chaos: Multi-state Shannon Entropy and Sensitivity Analysis for Real-Time E-commerce Auditing}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Farikh Muhammad Fauzan}
+\IEEEauthorblockA{\textit{DustiniaDelixia Groceria Research Group} \\
+Jakarta, Indonesia \\
+tech@dustinia.com}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Farikh Muhammad Fauzan}
+\IEEEauthorblockA{\textit{Dept. of Informatics Eng., FTEIC} \\
+\textit{Institut Teknologi Sepuluh Nopember} \\
+Surabaya, Indonesia \\
+5025241092@student.its.ac.id}
+}
+
+\maketitle
+
+\begin{abstract}
+The rapid growth of global e-commerce has introduced extreme stochastic variability into last-mile logistics. Traditional descriptive metrics, such as average lead times and aggregated On-Time Delivery Rates (OTDR), often mask systemic disorder and structural vulnerabilities within supply chain networks. This paper proposes a practical, information-theoretic framework named \textit{DeliveryForensics}. We utilize Multi-state Shannon Entropy to quantify operational uncertainty and an additive What-If Sensitivity Analysis to evaluate recovery pathways. Built on a high-throughput ELT pipeline leveraging the ClickHouse columnar engine, our system enables real-time forensic diagnostics on large-scale transactional datasets. We evaluate our approach using the Olist Brazilian E-Commerce dataset (n=96,455), revealing a three-tier hub taxonomy that identifies Geographic Variability Hubs in high-volume states, Low-Entropy Failure Hub candidates in isolated regions, and borderline Chaos Hub candidates. Furthermore, we demonstrate via simulation that a 20\% optimization in targeted seller preparation stages yields a projected OTDR of 93.49\% [bootstrap 95\% CI: 93.42\%, 93.57\%], representing a statistically significant improvement of 1.60 percentage points toward the 95\% SLO target. Our methodology provides a rigorous, complementary paradigm for automated, high-performance logistics auditing.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Logistics Forensics, Shannon Entropy, Sensitivity Analysis, ClickHouse, E-commerce, Supply Chain Resilience, Real-Time Analytics
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{T}{he} logistics industry is currently experiencing a critical informational paradox: despite high tracking visibility, operational predictability remains elusive \cite{chopra2004supply}. Traditional monitoring systems rely on central tendencies that inherently obscure the underlying distribution of fulfillment failures. As e-commerce networks scale, the variance in lead times becomes a dominant source of cost, as unpredictability prevents optimal resource allocation and degrades customer trust. This gives rise to the classic bullwhip effect in information distortion \cite{lee1997bullwhip}.
+
+Recent advancements have characterized supply chain complexity as a quantifiable system property rather than an external constraint \cite{wang2016bullwhip}. However, there remains a significant gap between theoretical complexity measures and real-time industrial implementation. This gap is not unique to the Brazilian market; Mahmoudi et al.\ \cite{mahmoudi2026real} identify analogous KPI monitoring challenges in non-food retail supply chains, highlighting the need for real-time analytical frameworks applicable across diverse logistics environments. To bridge this, we propose \textit{DeliveryForensics}, an advanced investigative system that transitions logistics monitoring from descriptive reporting to prescriptive diagnostics. 
+
+We formally define a ``Chaos Hub'' as any distribution node exhibiting a Fulfillment Entropy Index (FEI) $> 1.5$ bits alongside an SLA-violation rate ($L_{\text{SLA}}$) exceeding 20\%, indicating high structural unpredictability co-occurring with systematic SLA non-compliance. This paper makes the following contributions:
+\begin{enumerate}
+    \item \textbf{Fulfillment Entropy Index (FEI):} A multi-state formalization of operational uncertainty derived from Shannon Information Theory \cite{shannon1948mathematical}, enabling the identification of structurally unstable distribution nodes.
+    \item \textbf{What-If Sensitivity Analysis:} A systematic, scenario-based framework for estimating the recovery potential of Service Level Agreements (SLAs) under hypothetical operational interventions, assuming \textit{ceteris paribus}.
+    \item \textbf{High-Performance In-Database Forensics:} An architecture leveraging ClickHouse's columnar execution and stateful aggregation \cite{abadi2013design, schulze2024clickhouse} to perform complex uncertainty calculations directly on millions of rows with sub-second latency.
+\end{enumerate}
+
+\section{Related Work}
+
+\subsection{Information Theory in Supply Chain Management}
+The application of Information Theory to supply chain dynamics focuses on quantifying the disorder or ``noise'' within logistics processes \cite{shannon1948mathematical}. Shannon's foundational theory provides the mathematical basis for measuring uncertainty in discrete systems. Recent work has extended this foundation toward real-time operational monitoring: Gerrits and van Heeswijk \cite{gerrits2026entropy} propose---in a concurrent preprint---a formal connection between structural and information entropy in last-mile logistics, while Mahmoudi et al.\ \cite{mahmoudi2026real} demonstrate the value of KPI monitoring frameworks for non-food retail supply chains. Our work builds on this by formalizing the FEI as an information-theoretic measure of per-hub delivery uncertainty, implemented natively in a columnar OLAP engine for real-time computation.
+
+\subsection{Prescriptive Simulation and Scenario Analysis}
+While machine learning models excel at predicting delays, they often lack the actionability required for operational intervention \cite{toorajipour2021artificial}. The industry is moving toward ``Augmented Intelligence'' and prescriptive analytics, where systems simulate what-if scenarios to guide management decisions \cite{lepenioti2020prescriptive}. Wang and Yan \cite{wang2022global} extend this prescriptive paradigm by proposing a global method that bridges prediction error directly into optimization, providing a principled approach to ``predict, then optimize'' workflows that complements the sensitivity analysis framework proposed here. Kumar and Kumar~\cite{kumar2024uncertain} demonstrate that effective network design must simultaneously optimize cost, uncertainty, and environmental objectives---a multi-dimensional complexity that entropy-based hub diagnostics can characterize at the distribution-node level, enabling targeted rather than system-wide interventions. Rather than employing complex structural causal models (SCMs) \cite{pearl2009causality}, we simplify the intervention analysis into SQL-native sensitivity models. This provides a scalable bridge between predictive modeling and prescriptive policy making without the computational overhead of full DAG resolution.
+
+\subsection{Columnar OLAP for Forensics}
+Modern supply chain forensics requires an engine capable of handling high-velocity transactional data without the performance penalties of traditional row-oriented databases. While Abadi et al. \cite{abadi2013design} highlighted the foundational efficiency of columnar formats, the landscape has evolved significantly with distributed engines like ClickHouse. Schulze et al.\ \cite{schulze2024clickhouse} document the architecture and performance characteristics that enable ClickHouse to achieve lightning-fast analytics on massive datasets. Our system utilizes the native \texttt{entropyState} function in ClickHouse to maintain continuous, incremental updates to the FEI without requiring full table scans, demonstrating the capability of modern columnar systems to handle complex metrics natively alongside other embeddable analytical databases like DuckDB \cite{raasveldt2019duckdb}.
+
+\section{Theoretical Framework}
+
+\subsection{Terminological Clarification: Two Complementary Lateness Metrics}
+This paper employs two distinct but complementary definitions of lateness, which must not be conflated:
+\begin{itemize}
+  \item \textbf{SLA-Lateness ($L_{\text{SLA}}$):} An order is SLA-late if and only if it arrives after its committed \texttt{order\_estimated\_delivery\_date}. This definition underlies the national OTDR of 91.89\%, corresponding to an SLA-late rate of 8.11\% (7,823 orders).
+  \item \textbf{Absolute-Threshold Lateness ($L_{\text{abs}}$):} For FEI computation, outcomes are classified into four states using absolute day thresholds (\textit{Early}: $\leq$5d, \textit{On-Time}: $\leq$10d, \textit{Delayed}: $\leq$20d, \textit{Critical}: $>$20d). Under this definition, an order promising 15-day delivery that arrives in 12 days is \textit{On-Time} under $L_{\text{SLA}}$ but \textit{Delayed} under $L_{\text{abs}}$, reflecting time-based variability regardless of contractual commitment.
+\end{itemize}
+The Chaos Hub criterion uses $L_{\text{SLA}}$ for the 20\% late-rate condition, while FEI computation uses $L_{\text{abs}}$ for state boundaries.
+
+\textbf{Geographic Variability Hub:} A distribution node exhibiting FEI $> 1.5$ bits and $L_{\text{SLA}} \leq 20\%$ is classified as a \textit{Geographic Variability Hub}. High entropy in this context reflects natural route diversity arising from serving heterogeneous delivery distances, rather than systemic process failure. Geographic Variability Hubs may not require process re-engineering but instead benefit from SLA-relative threshold recalibration.
+
+\textbf{Low-Entropy Failure Hub (LEFH):} A distribution node exhibiting FEI $\leq 1.5$ bits and $L_{\text{SLA}} > 20\%$ is classified as a \textit{Low-Entropy Failure Hub (LEFH)}. Low entropy in this context indicates that delivery failures are \textit{systematic and predictable}: the node consistently routes orders into a single high-latency state (predominantly \textit{Critical}, i.e., $> 20$ days) rather than distributing outcomes stochastically across all four states. LEFHs require targeted infrastructure investment (e.g., improved carrier route access, regional consolidation centers) rather than the process variance reduction appropriate for Chaos Hubs.
+
+\subsection{Multi-state Fulfillment Entropy Index (FEI)}
+We model the fulfillment process as a discrete random variable $X$ with a state space representing four delivery outcomes ($L_{\text{abs}}$): $X \in \{Early, On\text{-}Time, Delayed, Critical\}$. The FEI is formalized using Shannon Entropy:
+
+\begin{equation}
+H(X) = - \sum_{i=1}^{k} P(x_i) \log_2 P(x_i)
+\end{equation}
+
+where $P(x_i)$ is the empirical probability of state $i$ occurring at a specific hub. By using four discrete states, the maximum theoretical entropy is 2.0 bits.
+
+\subsection{What-If Sensitivity Analysis}
+We model total delivery time $T$ as an additive combination of stage latencies: $T = S_1 + S_2 + S_3$, where $S_1$ is approval, $S_2$ is seller preparation, and $S_3$ is carrier transit. Under this additive model and the simplifying assumption of \textit{ceteris paribus}, we define a structural what-if simulation that perturbs Seller Preparation Time by a factor of 0.8 to estimate first-order recovery potential:
+
+\begin{equation}
+OTDR_{sim} = \frac{1}{N} \sum_{j=1}^{N} \mathbb{I} \left( S_{1j} + 0.8 S_{2j} + S_{3j} \leq SLA_j \right)
+\end{equation}
+
+where $\mathbb{I}(\cdot)$ is the indicator function and $SLA_j$ corresponds to the \texttt{order\_estimated\_delivery\_date} column in the dataset, representing the delivery deadline committed to the customer at time of purchase. We explicitly note that this simulation does not constitute causal inference in the formal sense of Pearl's do-calculus \cite{pearl2009causality}, as we do not construct an explicit causal graph. Rather, it serves as a sensitivity analysis.
+
+\section{System Architecture}
+
+The \textit{DeliveryForensics} stack leverages ClickHouse for the analytical core and Apache Airflow for ELT orchestration. We utilize the Olist Brazilian E-Commerce Public Dataset \cite{olist2018}, filtering for ``delivered'' status to yield 96,455 transactions. Physical distances are enriched using ClickHouse's native \texttt{greatCircleDistance()} function. While the current evaluation uses a historical batch dataset (2016--2018), the DeliveryForensics architecture is designed for streaming ingestion via Airflow; the ``real-time'' descriptor refers specifically to query latency at the analytical layer upon new data ingestion, not to end-to-end live-order monitoring.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.2cm and 1.5cm,
+    box/.style={rectangle, draw, rounded corners, align=center, minimum width=2.2cm, minimum height=0.8cm, fill=blue!5},
+    arrow/.style={thick, ->, >=stealth}
+]
+    % Nodes
+    \node[box] (csv) {Raw CSV\\(Ingestion)};
+    \node[box, right=of csv] (staging) {Staging\\(ClickHouse)};
+    \node[box, right=of staging] (fact) {Analytical Core\\(\texttt{fact\_deliveries})};
+    \node[box, below=of fact] (dim) {Dims \& Geo\\(Haversine)};
+    \node[box, below=of staging] (mv) {Materialized Views\\(Entropy Engine)};
+    
+    % Connections
+    \draw[arrow] (csv) -- node[above] {\scriptsize validate} (staging);
+    \draw[arrow] (staging) -- node[above] {\scriptsize transform} (fact);
+    \draw[arrow] (fact) -- (dim);
+    \draw[arrow] (dim) -- (mv);
+    \draw[arrow] (staging) -- node[left] {\scriptsize stateful agg} (mv);
+    
+    % Bounding Box for Airflow
+    \node[draw, dashed, inner sep=0.3cm, fit=(csv) (staging) (fact) (dim) (mv), label=above:{\textbf{Apache Airflow Orchestration}}] {};
+\end{tikzpicture}
+}
+\caption{The Dual-Core DeliveryForensics Architecture. Airflow orchestrates the pipeline while ClickHouse natively executes stateful aggregations (e.g., \texttt{entropyState}).}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Implementation Details and Reproducibility}
+To ensure reproducibility, we disclose the core schema for the entropy engine. The \texttt{mv\_entropy\_forensics} materialized view utilizes ClickHouse's native state functions to enable incremental updates.
+
+\begin{lstlisting}[caption={Materialized View for Multi-state Entropy}]
+CREATE MATERIALIZED VIEW entropy_forensics_mv
+ENGINE = AggregatingMergeTree()
+ORDER BY (seller_state, customer_state) AS
+SELECT
+    seller_state,
+    customer_state,
+    -- 4-state FEI: consistent with Section III.A
+    entropyState(toUInt8(multiIf(
+        total_delivery_days <= 5,  0,   -- Early
+        total_delivery_days <= 10, 1,   -- On-Time
+        total_delivery_days <= 20, 2,   -- Delayed
+        3                               -- Critical
+    ))) AS fei_state,
+    avgState(total_delivery_days) AS avg_days_state,
+    countState() AS n_orders_state
+FROM fact_deliveries
+GROUP BY seller_state, customer_state;
+\end{lstlisting}
+
+This architecture ensures investigators can query the current ``logistics temperature'' of any distribution node without re-processing historical data, maintaining sub-second latency targets.
+
+\section{Experimental Results and Discussion}
+\label{sec:results}
+
+\subsection{Benchmark Methodology}
+All benchmarks were conducted on a single machine with an Intel Core i7-12700 (12 cores), 32GB DDR4 RAM, and 1TB NVMe SSD. ClickHouse v24.3 and PostgreSQL v15.4 (baseline) were deployed in Docker containers. PostgreSQL was equipped with B-tree indices on \texttt{(seller\_state, total\_delivery\_days)}. Each query was executed 10 times, the first run (cold cache) discarded, and the median of the remaining 9 runs reported. Benchmarks were re-executed after the 4-state FEI query update; latency remained strictly bounded, with ClickHouse achieving a 50-67x speedup (Table I).
+
+\begin{table}[htbp]
+\centering
+\caption{Analytical Query Benchmarks (Median and Range of 9 runs, n=96,455)}
+\label{tab:benchmarks}
+\begin{tabularx}{\columnwidth}{lXXr}
+\toprule
+\textbf{Query Type} & \textbf{ClickHouse (Range)} & \textbf{PostgreSQL (Range)} & \textbf{Ratio} \\
+\midrule
+Full FEI Scan & 25 ms [23, 27] & 1,320 ms [1280, 1360] & 52.8x \\
+What-If Sim & 42 ms [40, 45] & 2,850 ms [2790, 2910] & 67.8x \\
+Geodesic Sync & 18 ms [17, 20] & 940 ms [910, 970] & 52.2x \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Distance vs. Latency Distribution}
+Fig.~\ref{fig:boxplot} presents the box plot of delivery times across distance buckets. We observe that variance increases non-linearly in the 500-1,000 km range.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=\columnwidth,
+    height=6cm,
+    xlabel={Distance Bucket (KM)},
+    ylabel={Actual Delivery Days},
+    boxplot/draw direction=y,
+    xtick={1,2,3,4,5},
+    xticklabels={0-250, 250-500, 500-1K, 1K-2K, 2K+},
+    grid=major
+]
+% n=27292
+\addplot+[boxplot prepared={lower whisker=2, lower quartile=4, median=6, upper quartile=9, upper whisker=18}] coordinates {(0,0)};
+% n=27590
+\addplot+[boxplot prepared={lower whisker=4, lower quartile=7, median=10, upper quartile=14, upper whisker=27}] coordinates {(0,0)};
+% n=25740
+\addplot+[boxplot prepared={lower whisker=6, lower quartile=9, median=12, upper quartile=17, upper whisker=30}] coordinates {(0,0)};
+% n=9731
+\addplot+[boxplot prepared={lower whisker=7, lower quartile=11, median=15, upper quartile=21, upper whisker=36}] coordinates {(0,0)};
+% n=6102
+\addplot+[boxplot prepared={lower whisker=8, lower quartile=13, median=18, upper quartile=25, upper whisker=42}] coordinates {(0,0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Box plot of delivery days by distance. Whiskers represent 5th and 95th percentiles, computed directly from Olist dataset using ClickHouse \texttt{quantile()}. Note: Sample sizes in the 0--250\,km bucket increased substantially in a prior revision following correction of a geolocation pipeline error.}
+\label{fig:boxplot}
+\end{figure}
+
+\subsection{Identification of Chaos Hubs}
+To ensure statistical reliability of entropy estimates, we restricted this analysis to distribution hubs with a minimum of 500 transactions. Table II reveals the empirical state-level distribution and classification.
+
+\begin{table}[htbp]
+\centering
+\caption{Distribution of Delivery States for Top 5 Regions by FEI ($n \ge 500$)}
+\label{tab:entropy}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l c c c c c c c}
+\toprule
+\textbf{State} & \textbf{Early} & \textbf{On-Time} & \textbf{Delayed} & \textbf{Crit.} & \textbf{FEI (bits)} & \textbf{$L_{\text{SLA}}$} & \textbf{CH?} \\
+\midrule
+SP & 19.7\% & 33.6\% & 32.8\% & 13.9\% & 1.913 & 8.8\% & No \\
+RJ & 18.4\% & 35.7\% & 33.6\% & 12.2\% & 1.879 & 8.5\% & No \\
+MG & 13.0\% & 36.1\% & 38.3\% & 12.6\% & 1.820 & 5.6\% & No \\
+PR & 9.8\% & 35.7\% & 40.7\% & 13.8\% & 1.781 & 6.5\% & No \\
+RS & 13.4\% & 43.5\% & 33.5\% & 9.6\% & 1.764 & 4.3\% & No \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+States satisfying both FEI $> 1.5$ bits and $L_{\text{SLA}} > 20\%$ are classified as Chaos Hubs (Column ``CH?''). States with high FEI but $L_{\text{SLA}} \leq 20\%$ are Geographic Variability Hubs, where entropy reflects route diversity rather than systemic SLA failure. Note that adoption of absolute-day thresholds in the 4-state FEI produces different hub rankings compared to binary-entropy approaches. The São Paulo (SP) hub exhibits the highest FEI of 1.913 bits; however, as SP is the primary logistics hub for Brazil, this high entropy is partially an artifact of using absolute-day thresholds. Shipments to remote regions naturally take longer but may still meet their SLAs, confirming its status as a Geographic Variability Hub.
+
+\begin{table}[htbp]
+\centering
+\caption{Exhaustive Hub Classification ($L_{\text{SLA}} > 5\%, n \ge 30$). States marked with $\dagger$ have insufficient sample size ($n < 500$) for statistically reliable FEI estimation ($95\%$ CI exceeds $\pm 0.3$\,bits) and are presented as exploratory references only. Amazonas (AM, $n=3$) and Par\'{a} (PA, $n=8$) were excluded due to extreme sample sparsity.}
+\label{tab:all_hubs}
+\begin{tabularx}{\columnwidth}{lcccX}
+\toprule
+\textbf{State} & \textbf{FEI (bits)\textsuperscript{$a$}} & \textbf{$L_{\text{SLA}}$} & \textbf{n} & \textbf{Hub Type} \\
+\midrule
+MA\textsuperscript{\dag} & 1.62 [1.32, 1.92] & 23.2\% & 388 & Borderline Chaos / LEFH \\
+RN\textsuperscript{\dag} & 1.97 [1.45, 2.00] & 9.8\% & 51 & Geographic Variability Hub \\
+CE\textsuperscript{\dag} & 1.74 [1.40, 1.98] & 9.4\% & 85 & Geographic Variability Hub \\
+SP & 1.913 & 8.8\% & 68,403 & Geographic Variability Hub \\
+RJ & 1.879 & 8.5\% & 4,185 & Geographic Variability Hub \\
+MS\textsuperscript{\dag} & 1.66 [1.10, 2.00] & 8.5\% & 47 & Geographic Variability Hub \\
+ES\textsuperscript{\dag} & 1.61 [1.35, 1.88] & 7.1\% & 308 & Geographic Variability Hub \\
+PR & 1.781 & 6.5\% & 7,427 & Geographic Variability Hub \\
+SC & 1.710 & 6.1\% & 3,550 & Geographic Variability Hub \\
+PB\textsuperscript{\dag} & 1.67 [0.95, 2.00] & 6.1\% & 33 & Geographic Variability Hub \\
+DF & 1.735 & 6.0\% & 803 & Geographic Variability Hub \\
+BA & 1.609 & 5.8\% & 549 & Geographic Variability Hub \\
+MG & 1.820 & 5.6\% & 7,647 & Geographic Variability Hub \\
+\bottomrule
+\multicolumn{5}{p{\dimexpr\columnwidth-2\tabcolsep}}{%
+\textsuperscript{$a$}For $n \ge 500$, bootstrap 95\% CI $< \pm 0.01$ bits; point estimate only. For $n < 500$, CI is shown.} \\
+\end{tabularx}
+\end{table}
+
+A full-spectrum analysis across Brazilian states (Table \ref{tab:all_hubs}) reveals an important structural insight: states with the highest SLA-violation rates (e.g., MA) tend to be low-volume regions excluded by the $n \ge 500$ reliability threshold. These states exhibit low or borderline FEI---a counterintuitive finding indicating that their delivery failures are systematic and predictable rather than stochastic. For states with $n < 50$, the 95\% CI computed via bootstrap simulation substantially exceeds $\pm 0.3$ bits (e.g., PB with $n=33$ exhibits CI $\approx$ [0.95, 2.00], spanning nearly the full theoretical range). FEI values for these states are presented for exploratory reference only and should not be used as a basis for operational decisions without additional data collection. High-volume states from Table~\ref{tab:entropy} ($n \ge 500$) appear in both tables for cross-reference; their hub classifications are identical. The 12 states omitted from Table~\ref{tab:all_hubs} all exhibited $L_{\text{SLA}} \leq 5\%$ and are classified as Stable Hubs. We term the pattern of systematic failure `Low-Entropy Failure Hubs': consistently poor but not chaotic.
+
+\subsection{Forensic Risk Attribution per Stage}
+Note: Stage-level entropy values use binary threshold-exceedance classification ($H_{\max} = 1.0$ bit), distinct from the 4-state FEI ($H_{\max} = 2.0$ bits) used for geographic analysis. These metrics are not directly comparable and should be interpreted as independent diagnostics. We analyzed the informational noise across the fulfillment lifecycle using binary threshold exceedance for each stage. Using operationally-motivated binary thresholds (Approval: $>24$h, Preparation: $>48$h, Transit: $>10$ days), Preparation Entropy ($H=0.995$ bits) was found higher than Transit Entropy ($H=0.886$ bits) and Approval Entropy ($H=0.626$ bits). However, we note that the transit threshold (10 days) is substantially more permissive than the preparation threshold (48 hours); a sensitivity analysis using a tighter transit threshold (e.g., $>3$ days) may alter this ranking. Under the thresholds chosen, seller preparation represents the most entropy-generating stage, suggesting it as a priority for variance reduction. Future work will harmonize stage thresholds for cross-stage comparability using a consistent 4-state framework.
+
+\subsection{What-If Recovery Simulation}
+To prescribe a solution, the Sensitivity Analysis engine was executed. The baseline OTDR for the nation is 91.89\%. Our simulation asked: \textit{What if we enforce stricter internal policies to reduce Seller Preparation Time by 20\%?} The SQL-native simulation revealed that optimizing this single metric yields a simulated global OTDR of \textbf{93.49\%} [bootstrap 95\% CI: 93.42\%, 93.57\%], representing a statistically significant recovery of 1.60 percentage points [95\% CI: 1.53\%, 1.68\%].
+
+\begin{lstlisting}[caption={Compliance Scenario Simulation}, label={lst:compliance}]
+-- Full compliance (f=1.0): 20% reduction applied to all orders
+-- Column mapping: s1_hrs = order_approved_at - order_purchase_timestamp
+--                 s2_hrs = order_delivered_carrier_date - order_approved_at
+--                 s3_hrs = order_delivered_customer_date - order_delivered_carrier_date
+-- sla_days = datediff('day', order_purchase_timestamp, order_estimated_delivery_date)
+
+SELECT
+    countIf(
+        (s1_hrs + 0.8 * s2_hrs + s3_hrs) / 24.0 <= sla_days
+    ) * 100.0 / count() AS otdr_full_compliance
+FROM dustinia.fact_deliveries
+WHERE s1_hrs IS NOT NULL
+  AND s2_hrs IS NOT NULL
+  AND s3_hrs IS NOT NULL;
+-- Expected result: 93.49% (baseline: 91.89%, improvement: +1.60 pp)
+
+-- Partial compliance model (f IN {0.75, 0.50}):
+-- Under the simplifying assumption of uniform compliance probability,
+-- OTDR(f) approx baseline + f * (OTDR_full - baseline).
+-- f = 0.75 -> OTDR approx 91.89 + 0.75 * 1.60 = 93.09%
+-- f = 0.50 -> OTDR approx 91.89 + 0.50 * 1.60 = 92.69%
+-- Full non-linear bootstrap simulation: see /scripts/bootstrap_ci.py
+\end{lstlisting}
+
+The projected OTDR of 93.49\% represents a refinement from the earlier estimate of 95.3\%; the previous value was computed using a fixed 10-day threshold as a proxy for SLA, whereas the current estimate uses the per-order \texttt{order\_estimated\_delivery\_date} column as $SLA_j$, which reflects actual customer-committed deadlines. The bootstrap CI was computed using 10,000 iterations with random seed 42 for reproducibility; full code is provided in the project repository. It is important to note that the projected OTDR of 93.49\% remains 1.51 percentage points below the target SLO of 95\%. This indicates that a 20\% reduction in Seller Preparation Time alone is insufficient to guarantee full SLO compliance. To bridge the remaining gap, a compound intervention targeting both Stage 2 and Stage 3 would be required. Furthermore, the bootstrapped CI captures only sampling variance. To illustrate model uncertainty, a sensitivity analysis using compliance rate scenarios shows that with 75\% adoption (partial compliance), the simulated OTDR drops to 93.09\%, and at 50\% adoption, to 92.69\%. The 100\% compliance scenario serves as an upper-bound estimate.
+
+\subsection{Statistical Validation of Sentiment Impact}
+Delayed orders received significantly lower review scores ($Mdn = 2.0, n = 7,699$) compared to on-time orders ($Mdn = 5.0, n = 88,639$), $U = 5.98 \times 10^7$, $p < 0.001$, rank-biserial $r = 0.82$. (Note: 117 orders of the 96,455 total were excluded due to missing review data). This large effect size confirms a strong association between delivery status and customer satisfaction. However, we note that this association does not establish causality, as confounding factors may contribute to both variables.
+
+\section{Limitations}
+This study is constrained by its reliance on historical Brazilian e-commerce data (2016--2018). Furthermore, while the methodology is mathematically robust, caution should be exercised before generalizing these specific findings geographically; the infrastructural realities, absolute-day threshold relevance, and baseline SLA distributions in Brazil may differ significantly from logistics environments in the USA, Europe, or emerging Asian markets. The absolute-day thresholds used for FEI classification are independent of per-order SLA commitments, which may overestimate disorder in high-volume, wide-radius hubs such as São Paulo. For statistically reliable FEI estimation, Table~\ref{tab:entropy} (high-volume hub ranking) restricts analysis to $n \ge 500$, the threshold below which bootstrap simulation yields a 95\% CI $> \pm 0.3$\,bits. Table~\ref{tab:all_hubs} applies a lower exploratory threshold of $n \ge 30$ to capture low-volume states with high $L_{\text{SLA}}$; all such entries are explicitly marked with confidence intervals. For states with $n < 50$, the actual CI substantially exceeds $\pm 0.3$\,bits (e.g., PB with $n=33$ yields CI $\approx$ [0.95, 2.00], spanning nearly the full theoretical range). All FEI bootstrap CIs were computed using 10,000 resampling iterations with random seed 42, consistent with the OTDR bootstrap in Section~\ref{sec:results}; code is available at the project repository. We note that the current methodology is validated on a dataset where confirmed Chaos Hubs are absent; this demonstrates the taxonomy's conservative classification behavior under conditions where no true positive class members exist, suggesting a low propensity for false positive classification in datasets with borderline-entropy hubs. Finally, the additive latency model used in the what-if simulation relies on a strict \textit{ceteris paribus} assumption, ignoring potential feedback loops.
+
+\section{Conclusion}
+The \textit{DeliveryForensics} system demonstrates that the combination of multi-state entropy diagnostics and what-if sensitivity analysis provides a complementary framework to traditional logistics auditing. By utilizing ClickHouse's columnar execution for in-database analytics, we achieved sub-second latency on complex uncertainty metrics. This integrated approach enables operators to systematically classify distribution nodes into a three-tier hub taxonomy: \textit{Chaos Hubs} (high entropy co-occurring with high SLA non-compliance, requiring process variance reduction), \textit{Geographic Variability Hubs} (high entropy driven by route diversity, requiring SLA-threshold recalibration), and \textit{Low-Entropy Failure Hubs} (low entropy with high SLA non-compliance, requiring infrastructure investment). Each hub type demands a categorically distinct operational prescription --- a diagnostic granularity that average-based metrics fundamentally cannot provide. The What-If Sensitivity Analysis further quantifies the recovery potential of targeted stage-level interventions under bounded uncertainty, providing operators with empirically grounded scenario planning. Furthermore, consistent with supply chain resilience frameworks \cite{liu2022leveraging}, our findings highlight that such analytical capabilities must be complemented by organizational disruption orientation to effectively navigate the stochastic nature of modern e-commerce fulfillment.
+
+\section*{Data and Code Availability}
+The Olist Brazilian E-Commerce Public Dataset used in this study is publicly available \cite{olist2018}. Preprocessing criteria required \texttt{status="delivered"} and complete timestamp records. Code availability, including core SQL queries shown in Listings 1 and 2 and the full implementation scripts, are available at \url{https://github.com/rei/DeliveryForensics} under the MIT License.
+
+\bibliographystyle{IEEEtran}
+\bibliography{bib/references}
+
+\end{document}
