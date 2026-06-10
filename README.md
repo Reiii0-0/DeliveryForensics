@@ -285,10 +285,8 @@ GROUP BY month ORDER BY month ASC;
 ### Tab 4: Partner Audit
 Benchmarking sellers and regional performance.
 
-<p align="center">
-  <img src="img/tab4_preview1.png" width="48%">
-  <img src="img/tab4_preview2.png" width="48%">
-</p>
+![Tab 4 Preview Top](img/tab4_preview1.png)
+![Tab 4 Preview Bottom](img/tab4_preview2.png)
 
 #### 1. Geographic Performance Clusters
 ```sql
@@ -318,10 +316,8 @@ GROUP BY f.is_late;
 ### Tab 6: Forensic Simulation
 The prescriptive engine identifying hubs of "Chaos".
 
-<p align="center">
-  <img src="img/tab6_preview1.png" width="48%">
-  <img src="img/tab6_preview.png2.jpg" width="48%">
-</p>
+![Tab 6 Preview Top](img/tab6_preview1.png)
+![Tab 6 Preview Bottom](img/tab6_preview.png2.jpg)
 
 #### 1. Counterfactual Impact Simulation
 ```sql
