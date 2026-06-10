@@ -417,15 +417,16 @@ Verification commands for Peer Reviewers:
 
 ---
 
-## 💡 Insights & Honest Limitations
+## 💡 Insights, Limitations & Future Work
 
 ### Key Insights
 - **The SP Paradox**: São Paulo has the highest entropy ($1.913$) but high OTDR. This confirms it is a **Tier II Hub** (Variability Hub), where disorder is a function of scale and route diversity, not process failure.
 - **Seller Prep Leverage**: Reducing $S_2$ by 20% yields a **1.60 pp** gain, proving warehouse operations are the primary bottleneck in the Olist network.
 
-### Honest Limitations
+### Honest Limitations & Future Work
 - **Geographic Specificity**: Thresholds are tuned for Brazil and require recalibration for different markets.
 - **Conservatism**: No "True Chaos Hubs" (Tier I) were found in this specific dataset, demonstrating the taxonomy's resistance to false positives.
+- **Spatio-Temporal Independence**: The current architecture treats geographic regions independently. Future work will implement Spatio-Temporal Graph Neural Networks (ST-GNN) or Generalized Space-Time Autoregressive (GSTARX) models to capture non-linear, cross-regional cascading delays and the impact of exogenous variables (e.g., weather, traffic).
 
 ---
 
