@@ -387,15 +387,15 @@ This script validates the environment, builds Docker images, and ensures all con
 ### Step 2: Trigger the ELT & Machine Learning Pipeline
 The pipeline will simulate data recovery and transform millions of cells.
 ```bash
-docker exec project-airflow-scheduler-1 python /opt/airflow/scripts/restore_db.py
-docker exec project-airflow-scheduler-1 python -c "import sys; sys.path.append('/opt/airflow/plugins'); from ml.late_predictor import run_ml_late_predictor; from ml.geo_cluster import run_ml_geo_cluster; run_ml_late_predictor(); run_ml_geo_cluster()"
-docker exec project-airflow-scheduler-1 python -c "import sys; sys.path.append('/opt/airflow/plugins'); from extractors.quality_checker import validate_data_quality; validate_data_quality()"
-docker exec project-airflow-scheduler-1 python /opt/airflow/scripts/bootstrap_ci.py
+docker compose exec airflow-scheduler python /opt/airflow/scripts/restore_db.py
+docker compose exec airflow-scheduler python -c "import sys; sys.path.append('/opt/airflow/plugins'); from ml.late_predictor import run_ml_late_predictor; from ml.geo_cluster import run_ml_geo_cluster; run_ml_late_predictor(); run_ml_geo_cluster()"
+docker compose exec airflow-scheduler python -c "import sys; sys.path.append('/opt/airflow/plugins'); from extractors.quality_checker import validate_data_quality; validate_data_quality()"
+docker compose exec airflow-scheduler python /opt/airflow/scripts/bootstrap_ci.py
 ```
 
 ### Step 3: Provision Dashboard
 ```bash
-docker exec project-airflow-scheduler-1 python /opt/airflow/scripts/provision_metabase.py
+docker compose exec airflow-scheduler python /opt/airflow/scripts/provision_metabase.py
 ```
 
 ### Step 4: Accessing Dashboards
@@ -411,9 +411,9 @@ Verification commands for Peer Reviewers:
 
 | Metric | Terminal Command | Target Result |
 |---|---|---|
-| **FEI Hub (SP)** | `docker exec project-clickhouse-1 clickhouse-client --query "SELECT round(entropy(toUInt8(multiIf(total_delivery_days <= 5, 0, total_delivery_days <= 10, 1, total_delivery_days <= 20, 2, 3))), 3) FROM dustinia.fact_deliveries WHERE seller_state = 'SP'"` | **1.913 bits** |
-| **Bootstrap CI** | `docker exec project-airflow-scheduler-1 python3 /opt/airflow/scripts/bootstrap_ci.py` | **1.60% improvement** |
-| **Data Count** | `docker exec project-clickhouse-1 clickhouse-client --query "SELECT count() FROM dustinia.fact_deliveries"` | **96,455** |
+| **FEI Hub (SP)** | `docker compose exec clickhouse clickhouse-client --query "SELECT round(entropy(toUInt8(multiIf(total_delivery_days <= 5, 0, total_delivery_days <= 10, 1, total_delivery_days <= 20, 2, 3))), 3) FROM dustinia.fact_deliveries WHERE seller_state = 'SP'"` | **1.913 bits** |
+| **Bootstrap CI** | `docker compose exec airflow-scheduler python3 /opt/airflow/scripts/bootstrap_ci.py` | **1.60% improvement** |
+| **Data Count** | `docker compose exec clickhouse clickhouse-client --query "SELECT count() FROM dustinia.fact_deliveries"` | **96,455** |
 
 ---
 
