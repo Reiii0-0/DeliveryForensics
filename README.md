@@ -220,7 +220,6 @@ The *Dashboard-as-Code* is automatically provisioned via `provision_metabase.py`
 Focuses on high-level business velocity and SLA adherence.
 
 ![Tab 1 Preview](img/tab1_preview.png)
-*(Placeholder: Upload Tab 1 screenshot to `img/` as `tab1_preview.png`)*
 
 #### 1. On-Time Delivery Rate (OTDR)
 ```sql
@@ -248,7 +247,6 @@ GROUP BY month ORDER BY month ASC;
 Deep-dive into the logistics topology and process breakdowns.
 
 ![Tab 2 Preview](img/tab2_preview.png)
-*(Placeholder: Upload Tab 2 screenshot to `img/` as `tab2_preview.png`)*
 
 #### 1. Logistics Anomaly Map (Scatter)
 ```sql
@@ -271,7 +269,6 @@ SELECT 'S3: Transit' as stage, round(avg(stage3_days * 24), 1) as avg_val;
 Correlating freight value with delivery performance.
 
 ![Tab 3 Preview](img/tab3_preview.png)
-*(Placeholder: Upload Tab 3 screenshot to `img/` as `tab3_preview.png`)*
 
 #### 1. Revenue & Freight at Risk
 ```sql
@@ -288,8 +285,10 @@ GROUP BY month ORDER BY month ASC;
 ### Tab 4: Partner Audit
 Benchmarking sellers and regional performance.
 
-![Tab 4 Preview](img/tab4_preview.png)
-*(Placeholder: Upload Tab 4 screenshot to `img/` as `tab4_preview.png`)*
+<p align="center">
+  <img src="img/tab4_preview1.png" width="48%">
+  <img src="img/tab4_preview2.png" width="48%">
+</p>
 
 #### 1. Geographic Performance Clusters
 ```sql
@@ -303,8 +302,7 @@ FROM dustinia.dim_geo_clusters ORDER BY cluster_id ASC;
 ### Tab 5: AI & Sentiment Validation
 Academic proof of the impact of operational failures.
 
-![Tab 5 Preview](img/tab5_preview.png)
-*(Placeholder: Upload Tab 5 screenshot to `img/` as `tab5_preview.png`)*
+![Tab 5 Preview](img/tab5_preview.png.jpg)
 
 #### 1. Customer Sentiment vs Latency
 ```sql
@@ -320,8 +318,10 @@ GROUP BY f.is_late;
 ### Tab 6: Forensic Simulation
 The prescriptive engine identifying hubs of "Chaos".
 
-![Tab 6 Preview](img/tab6_preview.png)
-*(Placeholder: Upload Tab 6 screenshot to `img/` as `tab6_preview.png`)*
+<p align="center">
+  <img src="img/tab6_preview1.png" width="48%">
+  <img src="img/tab6_preview.png2.jpg" width="48%">
+</p>
 
 #### 1. Counterfactual Impact Simulation
 ```sql
@@ -377,14 +377,14 @@ The entire stack is orchestrated using **Docker Compose** for local reproducibil
 For Windows (Highly Recommended):
 ```powershell
 cd project/
-.\start_all.ps1
+.\bin\start_all.ps1
 ```
 
 For Linux/Mac OS:
 ```bash
 cd project/
-chmod +x start_all.sh stop_all.sh
-./start_all.sh
+chmod +x bin/start_all.sh bin/stop_all.sh
+./bin/start_all.sh
 ```
 This script validates the environment, builds Docker images, and ensures all containers reach a `Healthy` state.
 
