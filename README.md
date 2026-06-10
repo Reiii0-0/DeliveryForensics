@@ -121,7 +121,7 @@ graph TD
 
 ## 🗄️ Dataset Schema & Multi-Stage Modeling
 
-The system utilizes the **DustiniaDelixia Groceria operational dataset**, which is structurally derived from the **Olist Brazilian E-Commerce dataset**, filtered for **$n=96,455$** valid delivered transactions.
+The system utilizes the public **Olist Brazilian E-Commerce dataset**, filtered for **$n=96,455$** valid delivered transactions.
 
 ### The Forensic Fact Table (`dustinia.fact_deliveries`)
 
