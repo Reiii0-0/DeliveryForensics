@@ -1,4 +1,6 @@
-#!/bin/bash
+﻿#!/bin/bash
+cd "$(dirname "#!/bin/bash
+")/.."
 
 # ============================================================================
 # DeliveryForensics: Master Startup Script
@@ -106,9 +108,10 @@ docker exec -e PYTHONPATH=/opt/airflow/plugins --user airflow project-airflow-sc
 echo -e "\n"
 log_success "DeliveryForensics system is starting up!"
 echo "--------------------------------------------------------"
-echo -e "🚀 ${GREEN}Airflow Webserver:${NC}  http://localhost:8080 (User: airflow, Pass: airflow)"
-echo -e "📊 ${GREEN}Metabase Dashboard:${NC} http://localhost:3000 (User: admin@dustinia.com, Pass: DustiniaMaster2026!)"
-echo -e "📦 ${GREEN}ClickHouse HTTP:${NC}    http://localhost:8123"
+echo -e "ðŸš€ ${GREEN}Airflow Webserver:${NC}  http://localhost:8080 (User: airflow, Pass: airflow)"
+echo -e "ðŸ“Š ${GREEN}Metabase Dashboard:${NC} http://localhost:3000 (User: admin@dustinia.com, Pass: DustiniaMaster2026!)"
+echo -e "ðŸ“¦ ${GREEN}ClickHouse HTTP:${NC}    http://localhost:8123"
 echo "--------------------------------------------------------"
 echo "Note: It may take 1-2 minutes for all services to become healthy."
 echo "Run 'docker compose ps' in the project directory to check status."
+

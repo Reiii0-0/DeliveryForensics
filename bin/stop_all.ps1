@@ -1,4 +1,6 @@
-param()
+﻿param()
+
+Set-Location -Path $PSScriptRoot\..
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n[INFO] Stopping DeliveryForensics Docker Stack..." -ForegroundColor Blue
@@ -6,3 +8,4 @@ Write-Host "`n[INFO] Stopping DeliveryForensics Docker Stack..." -ForegroundColo
 docker compose down
 
 Write-Host "`n[SUCCESS] Stack stopped successfully." -ForegroundColor Green
+

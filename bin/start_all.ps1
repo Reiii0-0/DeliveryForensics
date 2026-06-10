@@ -1,4 +1,6 @@
-param()
+﻿param()
+
+Set-Location -Path $PSScriptRoot\..
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n[INFO] Starting DeliveryForensics Docker Stack..." -ForegroundColor Blue
@@ -62,3 +64,4 @@ Write-Host " Airflow Webserver:  http://localhost:8080 (User: airflow, Pass: air
 Write-Host " Metabase Dashboard: http://localhost:3000 (User: admin@dustinia.com, Pass: DustiniaMaster2026!)"
 Write-Host " ClickHouse HTTP:    http://localhost:8123"
 Write-Host "--------------------------------------------------------"
+

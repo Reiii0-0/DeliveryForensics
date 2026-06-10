@@ -1,4 +1,6 @@
-#!/bin/bash
+﻿#!/bin/bash
+cd "$(dirname "#!/bin/bash
+")/.."
 
 # ============================================================================
 # DeliveryForensics: Master Stop Script
@@ -24,3 +26,4 @@ else
 fi
 
 log_info "Services stopped successfully. Data remains persistent in project/data/."
+
