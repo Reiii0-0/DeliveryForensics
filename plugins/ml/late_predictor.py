@@ -56,6 +56,10 @@ def run_ml_late_predictor():
     # --- Step 3: Training (XGBoost) ---
     print("Training XGBoost model...")
     # Scale_pos_weight used to handle imbalanced data
+    if y.sum() == 0:
+        print("Warning: No positive targets found for late predictor. Skipping training.")
+        return
+        
     ratio = (len(y) - y.sum()) / y.sum()
     
     model = xgb.XGBClassifier(

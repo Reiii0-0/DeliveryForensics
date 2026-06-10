@@ -47,13 +47,9 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="300">
+    <td align="center" width="400">
       <b>Farikh Muhammad Fauzan</b><br>
       <code>5025241135</code>
-    </td>
-    <td align="center" width="300">
-      <b>Farikh Muhammad Fauzan</b><br>
-      <code>5025241092</code>
     </td>
   </tr>
 </table>
@@ -87,7 +83,7 @@ Our framework classifies distribution nodes based on the relationship between En
 
 ## 🏗️ Forensic ELT Architecture & Workflow
 
-This system implements a **Forensic ELT Pipeline** — a high-throughput pattern that prioritizes stateful uncertainty metrics and counterfactual simulations. Workflow ini dijalankan menggunakan containerisasi penuh melalui Docker dan dikoordinasi oleh Apache Airflow.
+This system implements a **Forensic ELT Pipeline** — a high-throughput pattern that prioritizes stateful uncertainty metrics and counterfactual simulations. This workflow is fully containerized using Docker and orchestrated by Apache Airflow.
 
 ```mermaid
 graph TD
@@ -112,20 +108,20 @@ graph TD
     I --> J
 ```
 
-### Workflow Eksekusi Program (End-to-End)
-1. **Init Schema:** Menjalankan DDL ClickHouse (`staging_tables.sql`, `fact_dim_tables.sql`, `materialized_views.sql`).
-2. **Data Validation:** Mengaudit keutuhan 7 file CSV Olist dari direktori *source*.
-3. **Staging Load:** Memasukkan ~1 juta baris data ke dalam `stg_*` tables menggunakan sistem memori yang dioptimalkan (*Buffered Inserts*).
-4. **Data Transformation (ELT):** Melakukan *Join* antara entitas (Orders, Items, Customers, Sellers, Geolocation) untuk memproduksi tabel raksasa `fact_deliveries`.
-5. **Machine Learning Pipeline:** Menjalankan XGBoost (`late_predictor.py`) untuk XAI *Feature Importance* dan K-Means (`geo_cluster.py`) untuk segmentasi regional performa logistik.
-6. **Data Quality Check (DQC):** Melakukan pengecekan jarak (*Great Circle Distance*), viabilitas kronologi pesanan, dan null rate.
-7. **Simulation & API Provisioning:** Melakukan simulasi *bootstrap* dan menyuntikkan 21 KPI Dashboard ke Metabase via REST API.
+### End-to-End Execution Workflow
+1. **Schema Initialization:** Executes ClickHouse DDLs (`staging_tables.sql`, `fact_dim_tables.sql`, `materialized_views.sql`).
+2. **Data Validation:** Audits the integrity of the 7 source CSV files.
+3. **Staging Load:** Ingests ~1 million rows into `stg_*` tables using memory-optimized Buffered Inserts.
+4. **Data Transformation (ELT):** Performs massive relational joins across entities (Orders, Items, Customers, Sellers, Geolocation) to construct the `fact_deliveries` table.
+5. **Machine Learning Pipeline:** Triggers XGBoost (`late_predictor.py`) for XAI Feature Importance and K-Means (`geo_cluster.py`) for regional logistics segmentation.
+6. **Data Quality Check (DQC):** Validates geospatial logic (Great Circle Distance), chronological viability, and null rates.
+7. **Simulation & API Provisioning:** Executes bootstrap simulations and injects 21 forensic KPIs directly into Metabase via REST API.
 
 ---
 
 ## 🗄️ Dataset Schema & Multi-Stage Modeling
 
-The system utilizes the **Olist Brazilian E-Commerce dataset**, filtered for **$n=96,455$** valid delivered transactions.
+The system utilizes the **DustiniaDelixia Groceria operational dataset**, which is structurally derived from the **Olist Brazilian E-Commerce dataset**, filtered for **$n=96,455$** valid delivered transactions.
 
 ### The Forensic Fact Table (`dustinia.fact_deliveries`)
 
@@ -188,19 +184,19 @@ GROUP BY year_month, seller_state, customer_state;
 
 ## 🤖 Intelligence Layer: Machine Learning
 
-We utilize dua jenis algoritma Machine Learning utama dalam proyek ini yang dieksekusi secara otomatis saat DWH telah terbentuk:
+We utilize two primary Machine Learning algorithms in this project, which are automatically triggered upon DWH completion:
 
 ### 1. XGBoost Late Predictor (XAI)
-Bertujuan untuk mencapai Explainable AI dalam forensik rantai pasok.
+Aims to achieve Explainable AI within supply chain forensics.
 - **Model**: `XGBClassifier` (Gradient Boosted Trees).
 - **Target**: `is_late` (Binary Classification).
-- **Hasil**: Ekstraksi *Feature Importances* mengidentifikasi bias sistemik. Terbukti bahwa negara bagian seperti `SP`, `RJ`, dan bulan pesanan (`order_month`) memegang peran kunci terbesar terhadap probabilitas keterlambatan.
+- **Result**: Feature Importance extraction identifies systemic biases. It proves that states like `SP`, `RJ`, and `order_month` hold the heaviest weight in predicting delivery failure probabilities.
 
 ### 2. K-Means Geospatial Clustering
-Melakukan segmentasi performa per-*state* menjadi klaster visual.
-- **Model**: `KMeans` dari `scikit-learn`.
-- **Target**: `distance_km`, `late_rate`, `total_volume`.
-- **Hasil**: Membagi geografi menjadi 4 Zona (Zona Merah, Kuning, Biru, Hijau) yang langsung disuntikkan kembali ke dalam ClickHouse (`dim_geo_clusters`).
+Segments state-level performance into visual clusters.
+- **Model**: `KMeans` from `scikit-learn`.
+- **Features**: `distance_km`, `late_rate`, `total_volume`.
+- **Result**: Divides the national geography into 4 Strategic Zones (Red, Yellow, Blue, Green Zones) which are directly injected back into ClickHouse (`dim_geo_clusters`).
 
 ---
 
@@ -216,15 +212,15 @@ Instead of just predicting delays, the system calculates the **Recovery Potentia
 
 ## 📊 Metabase Dashboard — 6 Strategic Tabs & SQL Queries
 
-Dasbor *Dashboard-as-Code* diprovisioning otomatis melalui `provision_metabase.py`. Terdiri dari 21 metrik forensik kelas dunia yang dipartisi menjadi 6 tab strategis. 
+The *Dashboard-as-Code* is automatically provisioned via `provision_metabase.py`. It comprises 21 world-class forensic metrics partitioned into 6 strategic tabs. 
 
-> *Nanti Anda dapat mengganti tag gambar di bawah ini dengan nama file gambar yang telah diunggah ke folder `img/`.*
+> *Note: You can replace the image tags below once screenshots are uploaded to the `img/` folder.*
 
 ### Tab 1: Executive Health
 Focuses on high-level business velocity and SLA adherence.
 
 ![Tab 1 Preview](img/tab1_preview.png)
-*(Placeholder: Unggah screenshot Tab 1 ke folder `img/` dengan nama `tab1_preview.png`)*
+*(Placeholder: Upload Tab 1 screenshot to `img/` as `tab1_preview.png`)*
 
 #### 1. On-Time Delivery Rate (OTDR)
 ```sql
@@ -252,7 +248,7 @@ GROUP BY month ORDER BY month ASC;
 Deep-dive into the logistics topology and process breakdowns.
 
 ![Tab 2 Preview](img/tab2_preview.png)
-*(Placeholder: Unggah screenshot Tab 2 ke folder `img/` dengan nama `tab2_preview.png`)*
+*(Placeholder: Upload Tab 2 screenshot to `img/` as `tab2_preview.png`)*
 
 #### 1. Logistics Anomaly Map (Scatter)
 ```sql
@@ -275,7 +271,7 @@ SELECT 'S3: Transit' as stage, round(avg(stage3_days * 24), 1) as avg_val;
 Correlating freight value with delivery performance.
 
 ![Tab 3 Preview](img/tab3_preview.png)
-*(Placeholder: Unggah screenshot Tab 3 ke folder `img/` dengan nama `tab3_preview.png`)*
+*(Placeholder: Upload Tab 3 screenshot to `img/` as `tab3_preview.png`)*
 
 #### 1. Revenue & Freight at Risk
 ```sql
@@ -293,7 +289,7 @@ GROUP BY month ORDER BY month ASC;
 Benchmarking sellers and regional performance.
 
 ![Tab 4 Preview](img/tab4_preview.png)
-*(Placeholder: Unggah screenshot Tab 4 ke folder `img/` dengan nama `tab4_preview.png`)*
+*(Placeholder: Upload Tab 4 screenshot to `img/` as `tab4_preview.png`)*
 
 #### 1. Geographic Performance Clusters
 ```sql
@@ -308,7 +304,7 @@ FROM dustinia.dim_geo_clusters ORDER BY cluster_id ASC;
 Academic proof of the impact of operational failures.
 
 ![Tab 5 Preview](img/tab5_preview.png)
-*(Placeholder: Unggah screenshot Tab 5 ke folder `img/` dengan nama `tab5_preview.png`)*
+*(Placeholder: Upload Tab 5 screenshot to `img/` as `tab5_preview.png`)*
 
 #### 1. Customer Sentiment vs Latency
 ```sql
@@ -317,7 +313,7 @@ FROM dustinia.fact_deliveries f
 JOIN dustinia.stg_order_reviews r ON f.order_id = r.order_id
 GROUP BY f.is_late;
 ```
-**Interpretation**: Proves the $p < 0.001$ correlation between lateness and bad reviews (Median Telat = 2.0, Median On-Time = 5.0).
+**Interpretation**: Proves the $p < 0.001$ correlation between lateness and bad reviews (Median Late = 2.0, Median On-Time = 5.0).
 
 ---
 
@@ -325,7 +321,7 @@ GROUP BY f.is_late;
 The prescriptive engine identifying hubs of "Chaos".
 
 ![Tab 6 Preview](img/tab6_preview.png)
-*(Placeholder: Unggah screenshot Tab 6 ke folder `img/` dengan nama `tab6_preview.png`)*
+*(Placeholder: Upload Tab 6 screenshot to `img/` as `tab6_preview.png`)*
 
 #### 1. Counterfactual Impact Simulation
 ```sql
@@ -378,16 +374,22 @@ The entire stack is orchestrated using **Docker Compose** for local reproducibil
 ## 🏁 Running the System End-to-End
 
 ### Step 1: Initialization
-Buka terminal dan arahkan ke direktori root *project*, lalu jalankan skrip setup otomasi:
+For Windows (Highly Recommended):
+```powershell
+cd project/
+.\start_all.ps1
+```
+
+For Linux/Mac OS:
 ```bash
 cd project/
 chmod +x start_all.sh stop_all.sh
 ./start_all.sh
 ```
-Skrip ini akan memvalidasi *environment*, mem-build Docker, hingga kontainer dalam status `Healthy`.
+This script validates the environment, builds Docker images, and ensures all containers reach a `Healthy` state.
 
 ### Step 2: Trigger the ELT & Machine Learning Pipeline
-Pipeline akan mensimulasikan pemulihan dan mentransformasi jutaan *cell* data.
+The pipeline will simulate data recovery and transform millions of cells.
 ```bash
 docker exec project-airflow-scheduler-1 python /opt/airflow/scripts/restore_db.py
 docker exec project-airflow-scheduler-1 python -c "import sys; sys.path.append('/opt/airflow/plugins'); from ml.late_predictor import run_ml_late_predictor; from ml.geo_cluster import run_ml_geo_cluster; run_ml_late_predictor(); run_ml_geo_cluster()"
@@ -401,7 +403,7 @@ docker exec project-airflow-scheduler-1 python /opt/airflow/scripts/provision_me
 ```
 
 ### Step 4: Accessing Dashboards
-Akses **Metabase** (http://localhost:3000) dengan kredensial bawaan skrip:
+Access **Metabase** (http://localhost:3000) using the default script credentials:
 - **User**: `admin@dustinia.com`
 - **Pass**: `DustiniaMaster2026!`
 
@@ -448,7 +450,6 @@ Departemen Informatika — 2026
 
 | | |
 |---|---|
-| **Researcher** | Farikh Muhammad Fauzan |
 | **Researcher** | Farikh Muhammad Fauzan |
 | **Affiliation** | DustiniaDelixia Groceria Research Group |
 

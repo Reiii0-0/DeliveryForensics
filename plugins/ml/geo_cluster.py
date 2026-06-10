@@ -28,6 +28,12 @@ def run_ml_geo_cluster(n_clusters: int = 4):
     if df.empty:
         print("Warning: No data found for clustering.")
         return
+        
+    if len(df) < n_clusters:
+        print(f"Warning: Not enough states for clustering (expected >={n_clusters}, got {len(df)}). Adjusting n_clusters.")
+        n_clusters = len(df)
+        if n_clusters == 0:
+            return
 
     # --- Step 1: Preprocessing ---
     X = df[['late_rate_pct', 'avg_delivery_days']]

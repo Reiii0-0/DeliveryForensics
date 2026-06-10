@@ -20,29 +20,17 @@ def test_transform_fact_deliveries_execution(mock_get_client):
     
     # Verify truncate and insert were called
     assert mock_client.command.call_count >= 2
-    args, _ = mock_client.command.call_args_list[1]
-    assert "INSERT INTO dustinia.fact_deliveries" in args[0]
+    
+    # Verify that the main insert query was called at some point
+    insert_called = False
+    for call in mock_client.command.call_args_list:
+        if "INSERT INTO dustinia.fact_deliveries" in call[0][0]:
+            insert_called = True
+            break
+    assert insert_called, "Insert query was not executed"
 
 
-@patch('transformers.geo_transformer.get_ch_client')
-@patch('transformers.geo_transformer.haversine')
-def test_transform_dim_geo_logic(mock_haversine, mock_get_client):
-    """Test haversine distance calculation and batch update flow."""
-    mock_client = MagicMock()
-    mock_get_client.return_value = mock_client
-    
-    # Setup mock dataframes
-    mock_client.query_df.side_effect = [
-        pd.DataFrame({'zip': ['123', '456'], 'lat': [-23.5, -22.9], 'lng': [-46.6, -43.2]}), # Centroids
-        pd.DataFrame({'order_id': ['ord1'], 's_zip': ['123'], 'c_zip': ['456']})             # Locations
-    ]
-    mock_haversine.return_value = 100.5
-    
+def test_transform_dim_geo_logic():
+    """Test transform_dim_geo is a no-op."""
+    # Since logic migrated to native ClickHouse, this is just a no-op
     transform_dim_geo()
-    
-    # Verify distance was calculated
-    mock_haversine.assert_called_once()
-    
-    # Verify temp table was used for update
-    mock_client.insert_df.assert_called_once()
-    assert "dustinia.temp_distances" in mock_client.insert_df.call_args[0][0]

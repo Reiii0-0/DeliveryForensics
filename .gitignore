@@ -70,7 +70,6 @@ docs/paper/*.synctex.gz
 ehthumbs.db
 Thumbs.db
 
-# --- Archive & Images ---
+# --- Archive ---
 /archive/
-/img/
 /docs/IEEE-template/

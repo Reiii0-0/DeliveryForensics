@@ -97,10 +97,10 @@ echo -e "\nMetabase is UP. Running provisioning and restoration script..."
 
 # We run this from inside the airflow-scheduler container because it has all Python dependencies
 log_info "Restoring ClickHouse Data (Aligning with IEEE Paper)..."
-docker exec --user airflow project-airflow-scheduler-1 python3 /opt/airflow/scripts/restore_db.py
+docker exec -e PYTHONPATH=/opt/airflow/plugins --user airflow project-airflow-scheduler-1 python3 /opt/airflow/scripts/restore_db.py
 
 log_info "Provisioning Metabase Dashboard..."
-docker exec --user airflow project-airflow-scheduler-1 python3 /opt/airflow/scripts/provision_metabase.py
+docker exec -e PYTHONPATH=/opt/airflow/plugins --user airflow project-airflow-scheduler-1 python3 /opt/airflow/scripts/provision_metabase.py
 
 # --- Step 5: Final Summary ---
 echo -e "\n"

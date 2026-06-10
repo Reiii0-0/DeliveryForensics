@@ -13,7 +13,16 @@ def transform_fact_deliveries():
     
     # Pseudocode from @pipeline_dag.md translated to production SQL
     query = """
-    INSERT INTO dustinia.fact_deliveries
+    INSERT INTO dustinia.fact_deliveries (
+        order_id, customer_id, seller_id, customer_state, seller_state,
+        order_purchase_timestamp, order_approved_at, order_delivered_carrier_date,
+        order_delivered_customer_date, order_estimated_delivery_date,
+        order_month, order_year, order_dayofweek,
+        stage1_hours, stage2_hours, stage3_days, total_delivery_days,
+        is_late, delay_days,
+        freight_value, product_weight_g, product_volume_cm3,
+        distance_km, seller_miss_shipping_deadline
+    )
     SELECT
         o.order_id,
         o.customer_id,
@@ -83,6 +92,19 @@ def transform_fact_deliveries():
     print("Truncating fact_deliveries for fresh transformation...")
     client.command("TRUNCATE TABLE dustinia.fact_deliveries")
     
+    # Also truncate materialized views to prevent data duplication
+    # since they are AggregatingMergeTree triggered on fact_deliveries insert
+    mv_tables = [
+        'mv_state_metrics', 'mv_monthly_trend', 'mv_seller_performance',
+        'mv_stage_breakdown', 'mv_freight_analysis', 'mv_entropy_forensics'
+    ]
+    for mv in mv_tables:
+        # Check if MV exists before truncating to avoid errors on first run
+        try:
+            client.command(f"TRUNCATE TABLE dustinia.{mv}")
+        except Exception:
+            pass
+    
     print("Executing main transformation query...")
     client.command(query)
     
@@ -101,17 +123,17 @@ def transform_dimensions():
         late_orders, hist_late_rate, avg_delivery_days, miss_deadline_count
     )
     SELECT
-        seller_id,
-        seller_state,
-        seller_city,
+        f.seller_id,
+        f.seller_state,
+        s.seller_city,
         count()                                AS total_orders,
-        countIf(is_late = 1)                   AS late_orders,
-        round(countIf(is_late = 1)/count() * 100, 2) AS hist_late_rate,
-        round(avg(total_delivery_days), 1)     AS avg_delivery_days,
-        countIf(seller_miss_shipping_deadline = 1) AS miss_deadline_count
-    FROM dustinia.fact_deliveries
-    JOIN dustinia.stg_sellers USING seller_id
-    GROUP BY seller_id, seller_state, seller_city
+        countIf(f.is_late = 1)                 AS late_orders,
+        round(countIf(f.is_late = 1)/count() * 100, 2) AS hist_late_rate,
+        round(avg(f.total_delivery_days), 1)   AS avg_delivery_days,
+        countIf(f.seller_miss_shipping_deadline = 1) AS miss_deadline_count
+    FROM dustinia.fact_deliveries f
+    JOIN dustinia.stg_sellers s ON f.seller_id = s.seller_id
+    GROUP BY f.seller_id, f.seller_state, s.seller_city
     """
     
     # 2. dim_customers
@@ -130,6 +152,8 @@ def transform_dimensions():
     """
     
     print("Refreshing dim_sellers...")
+    client.command("TRUNCATE TABLE dustinia.dim_sellers")
     client.command(seller_query)
     print("Refreshing dim_customers...")
+    client.command("TRUNCATE TABLE dustinia.dim_customers")
     client.command(customer_query)
